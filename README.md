@@ -8,7 +8,7 @@ A deep learning project for EEG-based epileptic seizure detection using 1D Convo
 - Evaluate using Confusion Matrix and ROC Curve
 
 ## Dataset
-[UCI Epileptic Seizure Recognition Dataset](https://archive.ics.uci.edu/ml/datasets/Epileptic+Seizure+Recognition)
+[Epileptic Seizure Recognition Dataset - Kaggle](https://www.kaggle.com/datasets/harunshimanto/epileptic-seizure-recognition)
 - 11,500 EEG samples
 - 178 time-series features per sample
 - 5 classes (Class 1 = seizure activity, Classes 2–5 = non-seizure)
