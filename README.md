@@ -74,11 +74,18 @@ Epileptic_Seizure_Detection/
 ```
 
 ## EDA Highlights
-- Signal amplitude analysis per class
-- PCA 2D visualization showing seizure vs non-seizure separation
-- Average EEG waveform shape per class (mean ± std)
-- Feature variance analysis across 178 time steps
-- Correlation heatmap
+
+| EEG Signals Per Class | Class Distribution |
+|---|---|
+| ![EEG Signals](outputs/eda_eeg_signals.png) | ![Class Distribution](outputs/eda_class_distribution.png) |
+
+| PCA Visualization | Average Signal Shape Per Class |
+|---|---|
+| ![PCA](outputs/eda_pca.png) | ![Avg Signal](outputs/eda_avg_signal_per_class.png) |
+
+| Signal Statistics | Amplitude Distribution |
+|---|---|
+| ![Stats](outputs/eda_signal_stats.png) | ![Amplitude](outputs/eda_amplitude_distribution.png) |
 
 ## Setup & Run
 ```bash
