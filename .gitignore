@@ -1,0 +1,25 @@
+# Dataset (large file - download separately from UCI)
+data/
+
+# Model weights
+model/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+__pycache__/
+
+# Python
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+venv/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+CLAUDE.md
