@@ -1,8 +1,8 @@
 # Dataset (large file - download separately from UCI)
 data/
 
-# Model weights
-model/
+# Model weights (large files)
+model/*.h5
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
