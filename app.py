@@ -9,444 +9,558 @@ import warnings
 warnings.filterwarnings('ignore')
 
 st.set_page_config(
-    page_title="Epileptic Seizure Detection",
+    page_title="Seizure Detection AI",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ── Custom CSS ────────────────────────────────────────────────────────────────
+# ── Dark Theme CSS ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .main-title {
-        font-size: 2.5rem;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+
+    .stApp {
+        background-color: #0d0d0d;
+        color: #e0e0e0;
+    }
+
+    section[data-testid="stSidebar"] {
+        background-color: #111111;
+        border-right: 1px solid #222;
+    }
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    /* Hero */
+    .hero {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border: 1px solid #e74c3c33;
+        border-radius: 18px;
+        padding: 2.5rem 3rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .hero h1 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, #e74c3c, #ff6b6b, #ffd93d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+    .hero p {
+        font-size: 1.1rem;
+        color: #8899aa;
+        margin: 0;
+    }
+
+    /* Metric cards */
+    .metric-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+    .metric-card {
+        flex: 1;
+        background: #161616;
+        border: 1px solid #2a2a2a;
+        border-radius: 14px;
+        padding: 1.3rem 1rem;
+        text-align: center;
+        transition: border-color 0.2s;
+    }
+    .metric-card:hover { border-color: #e74c3c55; }
+    .metric-card .val {
+        font-size: 2rem;
         font-weight: 800;
         color: #e74c3c;
-        text-align: center;
-        margin-bottom: 0.2rem;
+        line-height: 1;
     }
-    .sub-title {
-        font-size: 1.1rem;
-        color: #7f8c8d;
-        text-align: center;
-        margin-bottom: 2rem;
+    .metric-card .lbl {
+        font-size: 0.8rem;
+        color: #667;
+        margin-top: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.2rem;
-        border-radius: 12px;
-        color: white;
-        text-align: center;
-        margin: 0.3rem;
-    }
-    .seizure-box {
-        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+
+    /* Result boxes */
+    .result-seizure {
+        background: linear-gradient(135deg, #ff416c22, #ff4b2b22);
+        border: 2px solid #e74c3c;
+        border-radius: 14px;
         padding: 1.5rem;
-        border-radius: 12px;
-        color: white;
         text-align: center;
-        font-size: 1.4rem;
-        font-weight: bold;
     }
-    .normal-box {
-        background: linear-gradient(135deg, #11998e, #38ef7d);
+    .result-seizure .label { font-size: 1.6rem; font-weight: 800; color: #e74c3c; }
+
+    .result-normal {
+        background: linear-gradient(135deg, #11998e22, #38ef7d22);
+        border: 2px solid #2ecc71;
+        border-radius: 14px;
         padding: 1.5rem;
-        border-radius: 12px;
-        color: white;
         text-align: center;
-        font-size: 1.4rem;
-        font-weight: bold;
     }
-    .info-box {
-        background: #f0f2f6;
-        padding: 1rem;
-        border-radius: 10px;
+    .result-normal .label { font-size: 1.6rem; font-weight: 800; color: #2ecc71; }
+
+    .conf { font-size: 0.95rem; color: #aaa; margin-top: 0.4rem; }
+
+    /* Section headers */
+    .section-header {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #e0e0e0;
         border-left: 4px solid #e74c3c;
-        margin: 1rem 0;
+        padding-left: 0.8rem;
+        margin: 1.5rem 0 1rem 0;
     }
+
+    /* Info box */
+    .info-box {
+        background: #161616;
+        border: 1px solid #2a2a2a;
+        border-left: 4px solid #3498db;
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        color: #aab;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Class badge */
+    .badge {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        height: 100%;
+    }
+    .badge .emoji { font-size: 1.8rem; }
+    .badge .cls { font-weight: 700; color: #e0e0e0; font-size: 0.95rem; }
+    .badge .desc { color: #667; font-size: 0.8rem; margin-top: 0.2rem; }
+
+    /* Model arch card */
+    .arch-card {
+        background: #111;
+        border: 1px solid #2a2a2a;
+        border-radius: 14px;
+        padding: 1.5rem;
+        height: 100%;
+    }
+    .arch-card h4 { color: #e74c3c; font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+
+    /* Sidebar nav */
+    div[data-testid="stRadio"] > label { color: #aaa !important; font-size: 0.85rem; }
+    div[data-testid="stRadio"] > div > label { color: #e0e0e0 !important; }
+
+    /* Status pill */
+    .pill-ok {
+        display: inline-block;
+        background: #1a3a2a;
+        border: 1px solid #2ecc71;
+        color: #2ecc71;
+        border-radius: 20px;
+        padding: 0.25rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .pill-warn {
+        display: inline-block;
+        background: #3a2a1a;
+        border: 1px solid #f39c12;
+        color: #f39c12;
+        border-radius: 20px;
+        padding: 0.25rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* Dataframe */
+    .stDataFrame { border-radius: 10px; overflow: hidden; }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] { background: #111; border-radius: 10px; padding: 4px; }
+    .stTabs [data-baseweb="tab"] { background: transparent; color: #888; border-radius: 8px; }
+    .stTabs [aria-selected="true"] { background: #1a1a1a !important; color: #e74c3c !important; }
+
+    /* Button */
     .stButton > button {
-        width: 100%;
         background: linear-gradient(135deg, #e74c3c, #c0392b);
         color: white;
         border: none;
-        border-radius: 8px;
-        padding: 0.6rem 1rem;
-        font-size: 1rem;
-        font-weight: bold;
+        border-radius: 10px;
+        padding: 0.6rem 2rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        width: 100%;
+        transition: opacity 0.2s;
     }
+    .stButton > button:hover { opacity: 0.85; }
+
+    /* Slider, selectbox */
+    .stSelectbox > div > div { background: #161616 !important; border-color: #333 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Load Model ────────────────────────────────────────────────────────────────
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
 @st.cache_resource
 def load_model():
     try:
         import tensorflow as tf
-        model_path = 'model/seizure_model.h5'
-        if os.path.exists(model_path):
-            return tf.keras.models.load_model(model_path), True
+        path = 'model/seizure_model.h5'
+        if os.path.exists(path):
+            return tf.keras.models.load_model(path), True
         return None, False
     except Exception:
         return None, False
 
 @st.cache_data
-def load_sample_data():
+def load_dataset():
     path = 'data/Epileptic Seizure Recognition.csv'
-    if os.path.exists(path):
-        return pd.read_csv(path)
+    return pd.read_csv(path) if os.path.exists(path) else None
+
+@st.cache_resource
+def get_scaler():
+    from sklearn.preprocessing import StandardScaler
+    df = load_dataset()
+    if df is not None:
+        feature_cols = [c for c in df.columns if c.startswith('X')]
+        sc = StandardScaler()
+        sc.fit(df[feature_cols].values)
+        return sc
     return None
 
-def preprocess_input(X_raw):
-    from sklearn.preprocessing import StandardScaler
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_raw)
-    return X_scaled.reshape(X_scaled.shape[0], X_scaled.shape[1], 1)
+def preprocess(X_raw):
+    sc = get_scaler()
+    if sc is not None:
+        X_sc = sc.transform(X_raw)
+    else:
+        from sklearn.preprocessing import StandardScaler
+        sc = StandardScaler()
+        X_sc = sc.fit_transform(X_raw)
+    return X_sc.reshape(X_sc.shape[0], X_sc.shape[1], 1)
 
-def plot_eeg_signal(signal, title, color='#e74c3c', prediction=None):
-    fig, ax = plt.subplots(figsize=(12, 3))
-    ax.plot(signal, color=color, linewidth=1.2)
-    ax.fill_between(range(len(signal)), signal, alpha=0.15, color=color)
-    ax.set_title(title, fontsize=13, fontweight='bold')
-    ax.set_xlabel('Time Steps'); ax.set_ylabel('Amplitude')
-    ax.grid(alpha=0.3); ax.set_xlim([0, len(signal)])
-    if prediction is not None:
-        label = "SEIZURE DETECTED" if prediction == 1 else "NO SEIZURE"
-        box_color = '#e74c3c' if prediction == 1 else '#2ecc71'
-        ax.text(0.98, 0.92, label, transform=ax.transAxes,
-                fontsize=11, fontweight='bold', color='white',
+def plot_signal(signal, title, color, pred=None):
+    fig, ax = plt.subplots(figsize=(12, 2.8))
+    fig.patch.set_facecolor('#111111')
+    ax.set_facecolor('#0d0d0d')
+    ax.plot(signal, color=color, linewidth=1.1, alpha=0.95)
+    ax.fill_between(range(len(signal)), signal, alpha=0.12, color=color)
+    ax.set_title(title, fontsize=11, fontweight='bold', color='#e0e0e0', pad=10)
+    ax.set_xlabel('Time Steps', color='#555', fontsize=9)
+    ax.set_ylabel('Amplitude', color='#555', fontsize=9)
+    ax.tick_params(colors='#444')
+    ax.spines[:].set_color('#222')
+    ax.grid(alpha=0.12, color='#333')
+    ax.set_xlim([0, len(signal)])
+    if pred is not None:
+        label = "⚠ SEIZURE" if pred == 1 else "✓ NORMAL"
+        bc = '#e74c3c' if pred == 1 else '#2ecc71'
+        ax.text(0.99, 0.91, label, transform=ax.transAxes,
+                fontsize=10, fontweight='bold', color=bc,
                 ha='right', va='top',
-                bbox=dict(boxstyle='round,pad=0.4', facecolor=box_color, alpha=0.9))
+                bbox=dict(boxstyle='round,pad=0.4', facecolor='#111', edgecolor=bc, linewidth=1.5))
     plt.tight_layout()
     return fig
 
-# ── Sidebar ───────────────────────────────────────────────────────────────────
+
+# ── Load resources ─────────────────────────────────────────────────────────────
+model, model_loaded = load_model()
+df_data = load_dataset()
+
+CLASS_NAMES = {1:'Seizure', 2:'Tumour Area', 3:'Healthy Area', 4:'Eyes Closed', 5:'Eyes Open'}
+CLASS_EMOJIS = {1:'🔴', 2:'🔵', 3:'🟢', 4:'🟡', 5:'🟣'}
+CLASS_COLORS = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6']
+
+# ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/brain.png", width=80)
-    st.markdown("## 🧠 Seizure Detection")
-    st.markdown("---")
-    page = st.radio("Navigate", ["🏠 Home", "🔍 Predict", "📊 EDA Visualizations", "ℹ️ Model Info"])
-    st.markdown("---")
-    model, model_loaded = load_model()
+    st.markdown("""
+    <div style='text-align:center;padding:1rem 0 0.5rem;'>
+        <div style='font-size:3rem;'>🧠</div>
+        <div style='font-size:1.1rem;font-weight:800;color:#e0e0e0;'>Seizure Detection</div>
+        <div style='font-size:0.75rem;color:#555;margin-top:0.2rem;'>EEG · Deep Learning · AI</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<hr style='border-color:#222;margin:1rem 0;'>", unsafe_allow_html=True)
+
+    page = st.radio("", ["🏠  Home", "🔍  Predict", "📊  EDA Plots", "ℹ️  Model Info"], label_visibility="collapsed")
+
+    st.markdown("<hr style='border-color:#222;margin:1rem 0;'>", unsafe_allow_html=True)
+
     if model_loaded:
-        st.success("✅ Model Loaded")
+        st.markdown('<span class="pill-ok">● Model Ready</span>', unsafe_allow_html=True)
     else:
-        st.warning("⚠️ Model not found\nTrain the model first.")
-    st.markdown("---")
-    st.markdown("**Dataset:** UCI Epileptic Seizure")
-    st.markdown("**Samples:** 11,500")
-    st.markdown("**Features:** 178 EEG time steps")
-    st.markdown("**Task:** Binary Classification")
+        st.markdown('<span class="pill-warn">● Model Not Trained</span>', unsafe_allow_html=True)
+        st.markdown("<div style='color:#555;font-size:0.78rem;margin-top:0.5rem;'>Run seizure_detection.ipynb to train.</div>", unsafe_allow_html=True)
+
+    st.markdown("<hr style='border-color:#222;margin:1rem 0;'>", unsafe_allow_html=True)
+    st.markdown("<div style='color:#444;font-size:0.78rem;'>Built by <b style='color:#666;'>Sandhya Singh</b></div>", unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
-# HOME PAGE
+# HOME
 # ══════════════════════════════════════════════════════════════════════════════
-if page == "🏠 Home":
-    st.markdown('<div class="main-title">🧠 Epileptic Seizure Detection</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Deep Learning-based EEG Signal Classification</div>', unsafe_allow_html=True)
+if page == "🏠  Home":
 
-    col1, col2, col3, col4 = st.columns(4)
+    st.markdown("""
+    <div class="hero">
+        <h1>🧠 Epileptic Seizure Detection</h1>
+        <p>AI-powered EEG signal classification using 1D CNN · LSTM · CNN-LSTM Hybrid</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="metric-row">
+        <div class="metric-card"><div class="val">11,500</div><div class="lbl">EEG Samples</div></div>
+        <div class="metric-card"><div class="val">178</div><div class="lbl">Time Steps</div></div>
+        <div class="metric-card"><div class="val">3</div><div class="lbl">DL Models</div></div>
+        <div class="metric-card"><div class="val">92%</div><div class="lbl">Target Accuracy</div></div>
+        <div class="metric-card"><div class="val">-30%</div><div class="lbl">False Alarms</div></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns([1, 1], gap="large")
+
     with col1:
-        st.markdown('<div class="metric-card"><h2>11,500</h2><p>EEG Samples</p></div>', unsafe_allow_html=True)
-    with col2:
-        st.markdown('<div class="metric-card"><h2>178</h2><p>EEG Features</p></div>', unsafe_allow_html=True)
-    with col3:
-        st.markdown('<div class="metric-card"><h2>3</h2><p>DL Models</p></div>', unsafe_allow_html=True)
-    with col4:
-        st.markdown('<div class="metric-card"><h2>92%</h2><p>Target Accuracy</p></div>', unsafe_allow_html=True)
-
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("### 📌 About the Project")
+        st.markdown('<div class="section-header">About</div>', unsafe_allow_html=True)
         st.markdown("""
-        This project uses **deep learning models** to automatically detect epileptic seizures
-        from EEG (Electroencephalogram) signals.
-
-        Epilepsy affects over **50 million people** worldwide. Early and accurate seizure
-        detection can significantly improve patient outcomes and reduce false alarms.
-
-        **What this app does:**
-        - Upload EEG signal data (CSV format)
-        - Automatically classifies as **Seizure** or **Non-Seizure**
-        - Visualizes the EEG signal with the prediction
-        - Shows confidence score
-        """)
+        <div style='color:#aaa;line-height:1.8;font-size:0.95rem;'>
+        Epilepsy affects over <b style='color:#e0e0e0;'>50 million people</b> worldwide.
+        This system automatically detects epileptic seizures from raw EEG signals
+        using deep learning — enabling faster diagnosis and reducing missed detections.<br><br>
+        Upload any EEG CSV file and get an instant prediction with confidence score
+        and signal visualization.
+        </div>
+        """, unsafe_allow_html=True)
 
     with col2:
-        st.markdown("### 🤖 Models Used")
-        st.markdown("""
-        | Model | Description |
-        |---|---|
-        | **1D CNN** | Captures local EEG patterns using convolution |
-        | **LSTM** | Learns temporal dependencies in EEG sequences |
-        | **CNN-LSTM** | Combines spatial + temporal feature extraction |
+        st.markdown('<div class="section-header">Dataset Classes</div>', unsafe_allow_html=True)
+        cols = st.columns(5)
+        for i, (col, cls) in enumerate(zip(cols, range(1, 6))):
+            with col:
+                st.markdown(f"""
+                <div class="badge">
+                    <div class="emoji">{CLASS_EMOJIS[cls]}</div>
+                    <div class="cls">Class {cls}</div>
+                    <div class="desc">{CLASS_NAMES[cls]}</div>
+                </div>""", unsafe_allow_html=True)
 
-        ### 📊 Dataset
-        **UCI Epileptic Seizure Recognition**
-        - 5 classes: 1 seizure + 4 non-seizure types
-        - Perfectly balanced: 2,300 samples each
-        - Binary task: Seizure (Class 1) vs Non-Seizure (2–5)
-        """)
-
-    st.markdown("---")
-    st.markdown("### 🔬 Class Description")
-    col1, col2, col3, col4, col5 = st.columns(5)
-    classes = [
-        ("🔴", "Class 1", "Seizure", "#ffe6e6"),
-        ("🔵", "Class 2", "Tumour Area", "#e6f0ff"),
-        ("🟢", "Class 3", "Healthy Area", "#e6fff0"),
-        ("🟡", "Class 4", "Eyes Closed", "#fffce6"),
-        ("🟣", "Class 5", "Eyes Open", "#f5e6ff"),
+    st.markdown('<div class="section-header">How It Works</div>', unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns(4)
+    steps = [
+        ("01", "Upload", "CSV file with 178 EEG features", "#e74c3c"),
+        ("02", "Preprocess", "Normalize & reshape signal", "#3498db"),
+        ("03", "Predict", "Deep learning model inference", "#9b59b6"),
+        ("04", "Result", "Seizure / Normal + confidence", "#2ecc71"),
     ]
-    for col, (emoji, cls, desc, bg) in zip([col1, col2, col3, col4, col5], classes):
+    for col, (num, title, desc, color) in zip([c1, c2, c3, c4], steps):
         with col:
             st.markdown(f"""
-            <div style='background:{bg};padding:1rem;border-radius:10px;text-align:center;'>
-            <h3>{emoji}</h3><b>{cls}</b><br><small>{desc}</small>
+            <div style='background:#111;border:1px solid #222;border-top:3px solid {color};
+                        border-radius:12px;padding:1.2rem;text-align:center;'>
+                <div style='font-size:1.8rem;font-weight:800;color:{color};opacity:0.4;'>{num}</div>
+                <div style='font-weight:700;color:#e0e0e0;margin:0.3rem 0;'>{title}</div>
+                <div style='color:#555;font-size:0.8rem;'>{desc}</div>
             </div>""", unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PREDICT PAGE
-# ══════════════════════════════════════════════════════════════════════════════
-elif page == "🔍 Predict":
-    st.markdown("## 🔍 EEG Seizure Prediction")
 
-    tab1, tab2 = st.tabs(["📁 Upload CSV", "🎲 Try Sample Data"])
+# ══════════════════════════════════════════════════════════════════════════════
+# PREDICT
+# ══════════════════════════════════════════════════════════════════════════════
+elif page == "🔍  Predict":
+    st.markdown('<div class="section-header">EEG Seizure Prediction</div>', unsafe_allow_html=True)
+
+    tab1, tab2 = st.tabs(["📁  Upload CSV", "🎲  Sample from Dataset"])
 
     with tab1:
-        st.markdown("### Upload EEG Data")
-        st.markdown('<div class="info-box">Upload a CSV file with 178 EEG feature columns (same format as the dataset). Each row = one EEG sample.</div>', unsafe_allow_html=True)
-
-        uploaded = st.file_uploader("Choose a CSV file", type=['csv'])
+        st.markdown('<div class="info-box">Upload a CSV with 178 EEG columns (X1–X178). Each row = one EEG recording.</div>', unsafe_allow_html=True)
+        uploaded = st.file_uploader("", type=['csv'], label_visibility="collapsed")
 
         if uploaded:
             try:
-                df_upload = pd.read_csv(uploaded)
-                st.success(f"✅ File uploaded: {df_upload.shape[0]} samples, {df_upload.shape[1]} columns")
+                df_up = pd.read_csv(uploaded)
+                feature_cols = [c for c in df_up.columns if c.startswith('X')]
+                X_input = df_up[feature_cols].values if len(feature_cols) == 178 else (df_up.values if df_up.shape[1] == 178 else None)
 
-                feature_cols = [c for c in df_upload.columns if c.startswith('X')]
-                if len(feature_cols) == 178:
-                    X_input = df_upload[feature_cols].values
-                elif df_upload.shape[1] == 178:
-                    X_input = df_upload.values
+                if X_input is None:
+                    st.error(f"Expected 178 feature columns, got {df_up.shape[1]}.")
                 else:
-                    st.error(f"Expected 178 EEG feature columns, got {df_upload.shape[1]}. Please check your file format.")
-                    X_input = None
-
-                if X_input is not None:
+                    st.success(f"✅ {df_up.shape[0]} samples loaded")
                     if not model_loaded:
-                        st.warning("⚠️ Model not trained yet. Train the model first by running `seizure_detection.ipynb`.")
+                        st.warning("Model not trained yet — showing signal preview only.")
+                        for i in range(min(3, len(X_input))):
+                            fig = plot_signal(X_input[i], f"Sample {i+1}", '#3498db')
+                            st.pyplot(fig); plt.close()
                     else:
-                        X_proc = preprocess_input(X_input)
-                        with st.spinner("Running prediction..."):
+                        X_proc = preprocess(X_input)
+                        with st.spinner("Running inference..."):
                             probs = model.predict(X_proc, verbose=0).ravel()
                             preds = (probs >= 0.5).astype(int)
 
-                        n_seizure = preds.sum()
-                        n_normal  = len(preds) - n_seizure
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Total", len(preds))
+                        c2.metric("🔴 Seizure", int(preds.sum()))
+                        c3.metric("🟢 Normal", int((1-preds).sum()))
 
-                        col1, col2, col3 = st.columns(3)
-                        col1.metric("Total Samples", len(preds))
-                        col2.metric("🔴 Seizure Detected", int(n_seizure))
-                        col3.metric("🟢 Normal", int(n_normal))
-
-                        result_df = pd.DataFrame({
-                            'Sample': range(1, len(preds)+1),
-                            'Prediction': ['🔴 SEIZURE' if p == 1 else '🟢 NORMAL' for p in preds],
-                            'Confidence': [f"{max(p, 1-p)*100:.1f}%" for p in probs]
-                        })
-                        st.dataframe(result_df, use_container_width=True)
-
-                        st.markdown("### EEG Signals")
-                        n_show = min(3, len(X_input))
-                        for i in range(n_show):
-                            color = '#e74c3c' if preds[i] == 1 else '#2ecc71'
-                            fig = plot_eeg_signal(X_input[i], f"Sample {i+1}", color, preds[i])
-                            st.pyplot(fig); plt.close()
-
+                        st.markdown("---")
+                        for i in range(min(5, len(X_input))):
+                            col_a, col_b = st.columns([4, 1])
+                            with col_a:
+                                color = '#e74c3c' if preds[i] == 1 else '#2ecc71'
+                                fig = plot_signal(X_input[i], f"Sample {i+1}", color, preds[i])
+                                st.pyplot(fig); plt.close()
+                            with col_b:
+                                conf = max(probs[i], 1 - probs[i]) * 100
+                                if preds[i] == 1:
+                                    st.markdown(f'<div class="result-seizure"><div class="label">⚠️ SEIZURE</div><div class="conf">{conf:.1f}% confidence</div></div>', unsafe_allow_html=True)
+                                else:
+                                    st.markdown(f'<div class="result-normal"><div class="label">✓ NORMAL</div><div class="conf">{conf:.1f}% confidence</div></div>', unsafe_allow_html=True)
             except Exception as e:
-                st.error(f"Error reading file: {e}")
+                st.error(f"Error: {e}")
 
     with tab2:
-        st.markdown("### Try with Sample Data from Dataset")
-
-        df_sample = load_sample_data()
-        if df_sample is None:
+        if df_data is None:
             st.warning("Dataset not found in `data/` folder.")
         else:
-            feature_cols = [c for c in df_sample.columns if c.startswith('X')]
+            feature_cols = [c for c in df_data.columns if c.startswith('X')]
             col1, col2 = st.columns(2)
             with col1:
-                class_filter = st.selectbox("Pick a class to sample from:", {
-                    1: "Class 1 — Seizure",
-                    2: "Class 2 — Tumour Area",
-                    3: "Class 3 — Healthy Area",
-                    4: "Class 4 — Eyes Closed",
-                    5: "Class 5 — Eyes Open"
-                })
+                class_sel = st.selectbox("Select class:", list(range(1, 6)),
+                    format_func=lambda x: f"Class {x} — {CLASS_NAMES[x]}")
             with col2:
-                n_samples = st.slider("Number of samples", 1, 10, 3)
+                n_sel = st.slider("Number of samples:", 1, 5, 3)
 
-            if st.button("🎲 Run Prediction on Sample"):
-                subset = df_sample[df_sample['y'] == class_filter].sample(n_samples, random_state=42)
+            if st.button("▶  Run Prediction"):
+                subset = df_data[df_data['y'] == class_sel].sample(n_sel, random_state=np.random.randint(1000))
                 X_input = subset[feature_cols].values
                 true_labels = subset['y'].values
 
-                if not model_loaded:
-                    st.warning("⚠️ Model not trained yet. Showing EEG signals only.")
-                    for i in range(len(X_input)):
-                        true_cls = true_labels[i]
-                        color = '#e74c3c' if true_cls == 1 else '#3498db'
-                        title = f"Sample {i+1} | True Class: {true_cls} ({'Seizure' if true_cls==1 else 'Non-Seizure'})"
-                        fig = plot_eeg_signal(X_input[i], title, color)
-                        st.pyplot(fig); plt.close()
-                else:
-                    X_proc = preprocess_input(X_input)
-                    probs = model.predict(X_proc, verbose=0).ravel()
-                    preds = (probs >= 0.5).astype(int)
+                for i in range(len(X_input)):
+                    st.markdown(f"<div style='color:#444;font-size:0.8rem;margin-top:1.5rem;text-transform:uppercase;letter-spacing:0.1em;'>Sample {i+1}</div>", unsafe_allow_html=True)
+                    col_a, col_b = st.columns([4, 1])
 
-                    for i in range(len(X_input)):
-                        col_a, col_b = st.columns([3, 1])
+                    if not model_loaded:
+                        color = '#e74c3c' if true_labels[i] == 1 else '#3498db'
                         with col_a:
-                            color = '#e74c3c' if preds[i] == 1 else '#2ecc71'
-                            fig = plot_eeg_signal(X_input[i], f"Sample {i+1}", color, preds[i])
+                            fig = plot_signal(X_input[i], f"True: {CLASS_NAMES[true_labels[i]]}", color)
                             st.pyplot(fig); plt.close()
                         with col_b:
-                            st.markdown("**Prediction:**")
-                            if preds[i] == 1:
-                                st.markdown('<div class="seizure-box">🔴 SEIZURE</div>', unsafe_allow_html=True)
+                            st.markdown(f"<div style='color:#555;font-size:0.85rem;'>True label:<br><b style='color:#e0e0e0;'>{CLASS_NAMES[true_labels[i]]}</b></div>", unsafe_allow_html=True)
+                    else:
+                        X_proc = preprocess(X_input[i:i+1])
+                        prob = model.predict(X_proc, verbose=0).ravel()[0]
+                        pred = int(prob >= 0.5)
+                        conf = max(prob, 1 - prob) * 100
+                        color = '#e74c3c' if pred == 1 else '#2ecc71'
+
+                        with col_a:
+                            fig = plot_signal(X_input[i], f"True: Class {true_labels[i]} — {CLASS_NAMES[true_labels[i]]}", color, pred)
+                            st.pyplot(fig); plt.close()
+                        with col_b:
+                            if pred == 1:
+                                st.markdown(f'<div class="result-seizure"><div class="label">⚠️<br>SEIZURE</div><div class="conf">{conf:.1f}%</div></div>', unsafe_allow_html=True)
                             else:
-                                st.markdown('<div class="normal-box">🟢 NORMAL</div>', unsafe_allow_html=True)
-                            st.markdown(f"**Confidence:** {max(probs[i], 1-probs[i])*100:.1f}%")
-                            true_label = "Seizure" if true_labels[i] == 1 else "Non-Seizure"
-                            correct = (preds[i] == 1) == (true_labels[i] == 1)
-                            st.markdown(f"**True Label:** {true_label}")
-                            st.markdown("✅ Correct" if correct else "❌ Incorrect")
+                                st.markdown(f'<div class="result-normal"><div class="label">✓<br>NORMAL</div><div class="conf">{conf:.1f}%</div></div>', unsafe_allow_html=True)
+                            correct = (pred == 1) == (true_labels[i] == 1)
+                            st.markdown(f"<div style='margin-top:0.8rem;font-size:0.85rem;color:#555;'>True: <b style='color:#aaa;'>{CLASS_NAMES[true_labels[i]]}</b><br>{'<span style=\"color:#2ecc71;\">✓ Correct</span>' if correct else '<span style=\"color:#e74c3c;\">✗ Wrong</span>'}</div>", unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
-# EDA VISUALIZATIONS PAGE
+# EDA PLOTS
 # ══════════════════════════════════════════════════════════════════════════════
-elif page == "📊 EDA Visualizations":
-    st.markdown("## 📊 Exploratory Data Analysis")
+elif page == "📊  EDA Plots":
+    st.markdown('<div class="section-header">Exploratory Data Analysis</div>', unsafe_allow_html=True)
 
-    plots = {
-        "Class Distribution": "outputs/eda_class_distribution.png",
-        "EEG Signals Per Class": "outputs/eda_eeg_signals.png",
-        "Average Signal Shape Per Class": "outputs/eda_avg_signal_per_class.png",
-        "PCA Visualization": "outputs/eda_pca.png",
-        "Signal Statistics": "outputs/eda_signal_stats.png",
-        "Amplitude Distribution": "outputs/eda_amplitude_distribution.png",
-        "Feature Variance": "outputs/eda_feature_variance.png",
-        "Correlation Heatmap": "outputs/eda_correlation_heatmap.png",
-    }
+    plots = [
+        ("EEG Signals Per Class",           "outputs/eda_eeg_signals.png"),
+        ("Class Distribution",               "outputs/eda_class_distribution.png"),
+        ("Average Signal Shape Per Class",   "outputs/eda_avg_signal_per_class.png"),
+        ("PCA Visualization",                "outputs/eda_pca.png"),
+        ("Signal Statistics Per Class",      "outputs/eda_signal_stats.png"),
+        ("Amplitude Distribution",           "outputs/eda_amplitude_distribution.png"),
+        ("Feature Variance Analysis",        "outputs/eda_feature_variance.png"),
+        ("Correlation Heatmap (X1–X20)",     "outputs/eda_correlation_heatmap.png"),
+    ]
 
-    keys = list(plots.keys())
-    for i in range(0, len(keys), 2):
-        col1, col2 = st.columns(2)
-        for col, key in zip([col1, col2], keys[i:i+2]):
+    for i in range(0, len(plots), 2):
+        c1, c2 = st.columns(2, gap="medium")
+        for col, (title, path) in zip([c1, c2], plots[i:i+2]):
             with col:
-                path = plots[key]
+                st.markdown(f"<div style='color:#aaa;font-size:0.9rem;font-weight:600;margin-bottom:0.5rem;'>{title}</div>", unsafe_allow_html=True)
                 if os.path.exists(path):
-                    st.markdown(f"**{key}**")
                     st.image(path, use_container_width=True)
                 else:
-                    st.info(f"{key} — Run `eda.ipynb` to generate this plot.")
+                    st.markdown(f"<div style='background:#111;border:1px dashed #333;border-radius:10px;padding:2rem;text-align:center;color:#444;'>Run eda.ipynb to generate</div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-bottom:1rem;'></div>", unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MODEL INFO PAGE
+# MODEL INFO
 # ══════════════════════════════════════════════════════════════════════════════
-elif page == "ℹ️ Model Info":
-    st.markdown("## ℹ️ Model Architecture Details")
+elif page == "ℹ️  Model Info":
+    st.markdown('<div class="section-header">Model Architectures</div>', unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
+    c1, c2, c3 = st.columns(3, gap="medium")
+    archs = [
+        ("🔴 1D CNN", "#e74c3c",
+         "Input → (178, 1)\nConv1D(64, k=5) + BN + Pool\nConv1D(128, k=5) + BN + Pool\nConv1D(256, k=3) + BN + Pool\nFlatten\nDense(128) → Dense(64)\nDense(1, sigmoid)",
+         "Captures local EEG patterns via 3-layer convolution blocks"),
+        ("🔵 LSTM", "#3498db",
+         "Input → (178, 1)\nLSTM(128, return_seq=True)\nLSTM(64)\nDense(64)\nDense(1, sigmoid)",
+         "Learns long-range temporal dependencies in EEG sequences"),
+        ("🟢 CNN-LSTM Hybrid", "#2ecc71",
+         "Input → (178, 1)\nConv1D(64) + BN + Pool\nConv1D(128) + BN + Pool\nLSTM(128, return_seq=True)\nLSTM(64)\nDense(64)\nDense(1, sigmoid)",
+         "Best of both — local features (CNN) + temporal context (LSTM)"),
+    ]
+    for col, (name, color, arch, desc) in zip([c1, c2, c3], archs):
+        with col:
+            st.markdown(f"""
+            <div style='background:#111;border:1px solid #222;border-top:3px solid {color};border-radius:14px;padding:1.5rem;'>
+                <div style='font-weight:700;color:{color};font-size:1rem;margin-bottom:1rem;'>{name}</div>
+                <pre style='background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;
+                            padding:1rem;font-size:0.78rem;color:#aaa;overflow-x:auto;'>{arch}</pre>
+                <div style='color:#555;font-size:0.82rem;margin-top:0.8rem;'>{desc}</div>
+            </div>""", unsafe_allow_html=True)
 
-    with col1:
-        st.markdown("### 🔴 1D CNN")
-        st.code("""Input (178, 1)
-Conv1D(64, k=5) + BN
-MaxPool + Dropout(0.3)
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Training Configuration</div>', unsafe_allow_html=True)
 
-Conv1D(128, k=5) + BN
-MaxPool + Dropout(0.3)
-
-Conv1D(256, k=3) + BN
-MaxPool + Dropout(0.3)
-
-Flatten
-Dense(128) + Dropout(0.5)
-Dense(64)  + Dropout(0.3)
-Dense(1, sigmoid)""", language="text")
-        st.markdown("**Strength:** Fast, captures local EEG patterns")
-
-    with col2:
-        st.markdown("### 🔵 LSTM")
-        st.code("""Input (178, 1)
-
-LSTM(128, return_seq=True)
-Dropout(0.3)
-
-LSTM(64)
-Dropout(0.3)
-
-Dense(64)
-Dropout(0.3)
-Dense(1, sigmoid)""", language="text")
-        st.markdown("**Strength:** Captures long-range temporal dependencies")
-
-    with col3:
-        st.markdown("### 🟢 CNN-LSTM Hybrid")
-        st.code("""Input (178, 1)
-Conv1D(64, k=5) + BN
-MaxPool + Dropout(0.3)
-
-Conv1D(128, k=3) + BN
-MaxPool + Dropout(0.3)
-
-LSTM(128, return_seq=True)
-Dropout(0.3)
-LSTM(64)
-Dropout(0.3)
-
-Dense(64) + Dropout(0.3)
-Dense(1, sigmoid)""", language="text")
-        st.markdown("**Strength:** Best of both — spatial + temporal")
-
-    st.markdown("---")
-    st.markdown("### ⚙️ Training Configuration")
-    col1, col2 = st.columns(2)
-    with col1:
+    c1, c2 = st.columns(2, gap="large")
+    with c1:
         st.markdown("""
         | Parameter | Value |
         |---|---|
-        | Loss | Binary Crossentropy |
-        | Optimizer | Adam (lr=0.001) |
+        | Loss Function | Binary Crossentropy |
+        | Optimizer | Adam (lr = 0.001) |
         | Batch Size | 128 |
         | Max Epochs | 30 |
-        | Val Split | 15% |
+        | Validation Split | 15% |
         """)
-    with col2:
+    with c2:
         st.markdown("""
-        | Callback | Setting |
+        | Callback | Config |
         |---|---|
         | EarlyStopping | patience=8, restore best |
         | ReduceLROnPlateau | factor=0.5, patience=4 |
-        | ModelCheckpoint | save best only |
+        | ModelCheckpoint | save best only (.h5) |
         """)
 
-    st.markdown("---")
-    st.markdown("### 📦 Tech Stack")
-    cols = st.columns(6)
-    techs = ["Python", "TensorFlow", "Keras", "scikit-learn", "Pandas", "Streamlit"]
-    for col, tech in zip(cols, techs):
-        col.markdown(f"**{tech}**")
-
-    if model_loaded:
-        st.markdown("---")
-        st.markdown("### 🏆 Loaded Model Summary")
-        import io
-        from contextlib import redirect_stdout
-        f = io.StringIO()
-        with redirect_stdout(f):
-            model.summary()
-        st.code(f.getvalue(), language="text")
+    st.markdown('<div class="section-header">Tech Stack</div>', unsafe_allow_html=True)
+    techs = [("🐍", "Python 3.10"), ("🧠", "TensorFlow 2.x"), ("📊", "scikit-learn"),
+             ("📈", "Matplotlib"), ("🐼", "Pandas"), ("🌐", "Streamlit")]
+    cols = st.columns(len(techs))
+    for col, (icon, name) in zip(cols, techs):
+        with col:
+            st.markdown(f"""
+            <div style='background:#111;border:1px solid #222;border-radius:10px;
+                        padding:1rem;text-align:center;'>
+                <div style='font-size:1.5rem;'>{icon}</div>
+                <div style='color:#aaa;font-size:0.82rem;margin-top:0.3rem;'>{name}</div>
+            </div>""", unsafe_allow_html=True)
