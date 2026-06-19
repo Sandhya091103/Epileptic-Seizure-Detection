@@ -108,6 +108,4 @@ jupyter notebook seizure_detection.ipynb
 `Python` `TensorFlow/Keras` `NumPy` `Pandas` `scikit-learn` `Matplotlib` `Seaborn` `SciPy`
 
 ## Author
-**Sandhya Singh**  
-GitHub: [@Sandhya091103](https://github.com/Sandhya091103)  
-Email: singhsandhya171@gmail.com
+**Sandhya Singh**
