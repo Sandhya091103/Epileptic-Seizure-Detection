@@ -212,13 +212,19 @@ st.markdown("""
 @st.cache_resource
 def load_model():
     try:
-        import tensorflow as tf
-        path = 'model/seizure_model.h5'
+        import onnxruntime as ort
+        path = 'model/seizure_model.onnx'
         if os.path.exists(path):
-            return tf.keras.models.load_model(path), True
+            session = ort.InferenceSession(path, providers=['CPUExecutionProvider'])
+            return session, True
         return None, False
     except Exception:
         return None, False
+
+
+def _predict(session, X_proc):
+    inp_name = session.get_inputs()[0].name
+    return session.run(None, {inp_name: X_proc.astype(np.float32)})[0].ravel()
 
 @st.cache_data
 def load_dataset():
@@ -401,7 +407,7 @@ elif page == "🔍  Predict":
                     else:
                         X_proc = preprocess(X_input)
                         with st.spinner("Running inference..."):
-                            probs = model.predict(X_proc, verbose=0).ravel()
+                            probs = _predict(model, X_proc)
                             preds = (probs >= 0.5).astype(int)
 
                         c1, c2, c3 = st.columns(3)
@@ -455,7 +461,7 @@ elif page == "🔍  Predict":
                             st.markdown(f"<div style='color:#555;font-size:0.85rem;'>True label:<br><b style='color:#e0e0e0;'>{CLASS_NAMES[true_labels[i]]}</b></div>", unsafe_allow_html=True)
                     else:
                         X_proc = preprocess(X_input[i:i+1])
-                        prob = model.predict(X_proc, verbose=0).ravel()[0]
+                        prob = _predict(model, X_proc)[0]
                         pred = int(prob >= 0.5)
                         conf = max(prob, 1 - prob) * 100
                         color = '#e74c3c' if pred == 1 else '#2ecc71'

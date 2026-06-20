@@ -5,6 +5,7 @@ data/
 model/cnn_model.h5
 model/lstm_model.h5
 model/cnn_lstm_model.h5
+model/seizure_model.h5
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
