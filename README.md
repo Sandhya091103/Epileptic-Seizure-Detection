@@ -73,6 +73,59 @@ Epileptic_Seizure_Detection/
 └── requirements.txt
 ```
 
+## Results
+
+### Model Comparison
+
+| Model | Test Accuracy | AUC | Epochs |
+|---|---|---|---|
+| 1D CNN | 98.09% | 0.9991 | 30 |
+| LSTM | 97.04% | 0.9945 | 13 (early stop) |
+| **CNN-LSTM Hybrid** | **99.26%** | **0.9993** | **28 (early stop)** |
+
+### Best Model — CNN-LSTM Hybrid
+
+| Metric | Non-Seizure | Seizure |
+|---|---|---|
+| Precision | 1.00 | 0.97 |
+| Recall | 0.99 | 0.99 |
+| F1-Score | 1.00 | 0.98 |
+
+**Confusion Matrix (CNN-LSTM on 2,300 test samples):**
+- ✅ True Positives (seizure correctly detected): **456 / 460**
+- ✅ True Negatives (non-seizure correctly rejected): **1,827 / 1,840**
+- ⚠️ False Alarms (FP): **13**
+- ⚠️ Missed Seizures (FN): **4**
+
+> Target was 92% accuracy — achieved **99.26%** ✅  
+> Target was 30% reduction in false alarms — only **13 false alarms out of 1,840** non-seizure samples ✅
+
+### Overfitting Analysis
+
+| Model | Train Acc | Val Acc | Test Acc | Gap (Train - Test) |
+|---|---|---|---|---|
+| 1D CNN | 99.69% | 97.54% | 98.09% | 1.60% ✅ |
+| LSTM | 97.21% | 97.03% | 97.04% | 0.17% ✅ |
+| CNN-LSTM | 99.80% | 99.06% | 99.26% | 0.54% ✅ |
+
+**No overfitting observed** — key reasons:
+- Train vs Test accuracy gap is **< 2% across all models** — negligible
+- `EarlyStopping` restored best weights before models could memorize training data
+- `Dropout` layers (0.3–0.5) and `BatchNormalization` acted as strong regularizers
+- Val accuracy and Test accuracy are nearly identical, confirming the model generalizes well to unseen data
+
+### Training Curves & Evaluation Plots
+
+| Training Curves | Model Comparison |
+|---|---|
+| ![Training](outputs/training_curves.png) | ![Comparison](outputs/model_comparison.png) |
+
+| Confusion Matrix | ROC Curve |
+|---|---|
+| ![CM](outputs/confusion_matrix.png) | ![ROC](outputs/roc_curve.png) |
+
+---
+
 ## EDA Highlights
 
 | EEG Signals Per Class | Class Distribution |
