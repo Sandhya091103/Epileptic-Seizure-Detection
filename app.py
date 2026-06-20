@@ -296,7 +296,7 @@ with st.sidebar:
 
     st.markdown("<hr style='border-color:#222;margin:1rem 0;'>", unsafe_allow_html=True)
 
-    page = st.radio("", ["🏠  Home", "🔍  Predict", "📊  EDA Plots", "ℹ️  Model Info"], label_visibility="collapsed")
+    page = st.radio("Navigation", ["🏠  Home", "🔍  Predict", "📊  EDA Plots", "ℹ️  Model Info"], label_visibility="collapsed")
 
     st.markdown("<hr style='border-color:#222;margin:1rem 0;'>", unsafe_allow_html=True)
 

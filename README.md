@@ -1,6 +1,10 @@
 # Epileptic Seizure Detection Using Deep Learning
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://epileptic-seizure-detection.streamlit.app/)
+
 A deep learning project for EEG-based epileptic seizure detection using 1D Convolutional Neural Networks, LSTM, and a CNN-LSTM Hybrid model.
+
+**Live Demo:** https://epileptic-seizure-detection.streamlit.app/
 
 ## Project Goals
 - Achieve **92% classification accuracy**
