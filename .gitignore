@@ -1,8 +1,10 @@
 # Dataset (large file - download separately from UCI)
 data/
 
-# Model weights (large files)
-model/*.h5
+# Model weights (large files - keep only best model)
+model/cnn_model.h5
+model/lstm_model.h5
+model/cnn_lstm_model.h5
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
